@@ -11,9 +11,16 @@ files, check them with the tools in `tools/`, and explain the result in terms a 
    interface, preferences and defaults.
 3. `PARTS_CATALOG.md`: every available part (from `PARTS_AVAILABLE.csv`) with its holes and notes.
    Use it to find "the right piece" instead of guessing. Parts not in the list are not available.
-4. The brief (`BRIEF_TEMPLATE.md` filled in), and any reference designs the person gives you
+4. The brief (usually `briefs/<robot-name>.md`, from `BRIEF_TEMPLATE.md`), and any reference designs the person gives you
    (usually in `designs/`, which is git-ignored). Study them before designing: they show the team's
    style better than any rule.
+5. Photos (usually `photos/<robot-name>/`). The brief labels each one:
+   - **reference**: the starting point. If they want that robot changed, work from its `.ldr`.
+   - **match**: reproduce that feature, fitted to the new design.
+   - **inspiration** (also the default for unlabeled photos): borrow the idea within the rules and
+     the parts list.
+   Never claim a part-for-part copy from photos: hidden pins and parts aren't visible. Say what you
+   inferred and what you assumed, and ask before copying anything exactly that isn't labeled match.
 
 ## Workflow
 

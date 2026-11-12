@@ -72,6 +72,11 @@ Every robot starts from a brief. Use `BRIEF_TEMPLATE.md`. The inputs are:
 9. **Parts / colors:** the parts available (`PARTS_AVAILABLE.csv`, or the team's own `profile/parts.csv`), colors to use or avoid.
 10. **Software:** values your drive code needs (wheel diameter, track width, motor ports and
     directions, hub orientation for buttons, display and gyro).
+11. **Reference designs and photos:** which `.ldr` to start from, if any. Each photo is labeled
+    reference (the starting point), match (copy this feature) or inspiration (borrow the idea).
+    Unlabeled means inspiration. Photos can't give a part-for-part copy (hidden parts).
+12. **Missions, builders, past problems:** what the robot must reach or lift; who builds it and by
+    when; what went wrong with earlier robots.
 
 ## 4. Component reference
 

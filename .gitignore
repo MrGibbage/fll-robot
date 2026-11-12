@@ -3,6 +3,8 @@ __pycache__/
 /lib
 /designs
 /renders
+/photos
+/briefs
 /out
 *.io
 profile/parts.csv

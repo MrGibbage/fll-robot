@@ -1,7 +1,9 @@
 # Robot design brief
 
-Copy this file, fill it in, and hand it to the agent along with `AGENTS.md`. Leave an item blank to
-use the default from your team profile.
+Copy this file to `briefs/<robot-name>.md`, fill it in, and point the agent at it. Leave an item
+blank to use the default from your team profile. Say **why** where you have a reason.
+
+**Robot name:**
 
 1. **Wheels and tires** (part numbers, or "same as <design>"):
 2. **Drive layout** (front / mid / rear wheel drive):
@@ -19,5 +21,11 @@ use the default from your team profile.
 8. **Charging access** (default: straight micro-USB cable reaches the hub without removing parts):
 9. **Parts and colors** (default: `PARTS_AVAILABLE.csv`, or `profile/parts.csv`; parts to add or rule out; colors to use or avoid):
 10. **Software constraints** (drive-code values that must not change, motor ports, hub orientation):
-11. **Reference designs** (`.ldr` files in `designs/` that show the style to follow):
-12. **Anything else** (missions in mind, things you've disliked in past robots…):
+11. **Reference designs** (`.ldr` files in `designs/`; say which one, if any, to start from):
+12. **Photos** (folder, then one line per photo: file, what it shows, and **reference** / **match** /
+    **inspiration**; unlabeled = inspiration):
+    - `photos/<robot-name>/top.jpg`: current robot from above, reference
+13. **Missions** (which field models the robot must reach, push or lift; heights and distances):
+14. **Builders and time** (experience, build deadline):
+15. **Problems with past robots** (drift, caster catching, attachments falling off…):
+16. **Anything else**:
