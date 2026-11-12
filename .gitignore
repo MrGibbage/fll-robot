@@ -1,9 +1,9 @@
 .venv/
 __pycache__/
-lib/
-designs/
-renders/
-out/
+/lib
+/designs
+/renders
+/out
 *.io
 profile/inventory.csv
 profile/TEAM_PROFILE.md
