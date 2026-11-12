@@ -9,8 +9,8 @@ files, check them with the tools in `tools/`, and explain the result in terms a 
 1. `DESIGN_RULES.md`: the rules, why each exists, the feasibility limits and the design procedure.
 2. `profile/TEAM_PROFILE.md` if it exists, else `profile/TEAM_PROFILE.example.md`: this team's PTO
    interface, preferences and defaults.
-3. `PARTS_CATALOG.md`: parts with their holes, inventory trays and notes. Use it to find "the right
-   piece" instead of guessing.
+3. `PARTS_CATALOG.md`: every available part (from `PARTS_AVAILABLE.csv`) with its holes and notes.
+   Use it to find "the right piece" instead of guessing. Parts not in the list are not available.
 4. The brief (`BRIEF_TEMPLATE.md` filled in), and any reference designs the person gives you
    (usually in `designs/`, which is git-ignored). Study them before designing: they show the team's
    style better than any rule.

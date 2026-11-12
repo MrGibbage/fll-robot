@@ -94,7 +94,9 @@ def parse_model(path):
         t=line.split()
         if len(t)>=3 and t[0]=='0' and t[1]=='FILE':
             cur=' '.join(t[2:]); models[cur]=[]; order.append(cur); continue
-        if len(t)>=15 and t[0]=='1' and cur is not None:
+        if len(t)>=15 and t[0]=='1':
+            if cur is None:                                  # plain single-model file: no 0 FILE header
+                cur=os.path.basename(path); models[cur]=[]; order.append(cur)
             v=list(map(float,t[2:14]))
             models[cur].append((int(t[1]),np.array([[v[3],v[4],v[5]],[v[6],v[7],v[8]],[v[9],v[10],v[11]]]),np.array(v[:3]),' '.join(t[14:])))
     return models,order

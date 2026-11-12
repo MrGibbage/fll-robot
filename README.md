@@ -12,9 +12,18 @@ The "prompt" is the whole repository:
 | `DESIGN_RULES.md` | both | Glossary, coordinates, feasibility limits, structural rules, the design procedure, checks |
 | `BRIEF_TEMPLATE.md` | you | The design inputs for a new robot: wheels, drive layout, size limits, PTO, weights… |
 | `profile/TEAM_PROFILE.example.md` | both | One team's standing choices; copy to `TEAM_PROFILE.md` (git-ignored) and make it yours |
-| `profile/inventory.example.csv` | both | Example parts inventory by tray; copy to `inventory.csv` and edit |
-| `PARTS_CATALOG.md` | both | ~100 likely parts: size, through-holes per direction, built-in pins, tray, notes (generated) |
+| `PARTS_AVAILABLE.csv` | both | The parts available to design with (one FLL team's collection, by category) |
+| `PARTS_CATALOG.md` | both | Every part in that list: size, through-holes per direction, built-in pins, notes (generated) |
 | `tools/` | the AI | Python checks: connections, collisions (incl. tires), brick bond, pins, symmetry, hub clearance, parts owned, rendering |
+
+## The parts list
+
+`PARTS_AVAILABLE.csv` is the set of parts the agent may design with: one real FLL team's
+collection (SPIKE Prime set plus extras), grouped by category. The agent treats anything not on it as
+"needs ordering". If your parts differ, copy it to `profile/parts.csv` and edit; the tools use yours
+when it exists. Columns are `part_number,category,part_name`. `part_number` is the LDraw id; it may
+be blank when the name holds the numbers, e.g. `Axle 16 (50451 / 69732)`. Run
+`tools/partslist.py` to see how each row resolves, then `tools/catalog.py` to rebuild the catalog.
 
 ## How it works
 
@@ -45,20 +54,20 @@ Then:
 
 ```bash
 cp profile/TEAM_PROFILE.example.md profile/TEAM_PROFILE.md     # edit for your team (git-ignored)
-cp profile/inventory.example.csv  profile/inventory.csv        # edit to match your trays (git-ignored)
+cp PARTS_AVAILABLE.csv profile/parts.csv                       # optional: if your parts differ (git-ignored)
 mkdir designs                                                   # put your .ldr exports here
-FLL_CATALOG_OUT=my_catalog.md .venv/bin/python tools/catalog.py  # your catalog: your inventory + usage in designs/
+FLL_CATALOG_OUT=my_catalog.md .venv/bin/python tools/catalog.py  # your catalog: your parts + usage in designs/
 .venv/bin/python tools/run_checks.py designs/my_robot.ldr       # try the checks on an existing robot
 ```
 
 Then open the repository in your agent and point it at `AGENTS.md` with a filled-in brief.
 
 Paths can also come from environment variables, to keep your private files outside the clone:
-`LDRAW_LIB`, `STUDIO_LIB`, `FLL_INVENTORY` (CSV or .xlsx), `FLL_DESIGNS`, `FLL_CATALOG_OUT`.
+`LDRAW_LIB`, `STUDIO_LIB`, `FLL_PARTS`, `FLL_DESIGNS`, `FLL_CATALOG_OUT`.
 
 ## Requirements
 
-Python 3.10+, `numpy`, `matplotlib` (and `openpyxl` for an `.xlsx` inventory). No binary files are
+Python 3.10+, `numpy`, `matplotlib`. No binary files are
 stored in the repository; the parts library is downloaded by `setup.sh`.
 
 ## Limits

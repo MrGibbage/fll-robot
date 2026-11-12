@@ -17,7 +17,7 @@ use the default from your team profile.
 6. **Attachment ID sensor** (yes/no; facing up / forward; where):
 7. **Weights** (purpose: counterbalance / traction; how many; part):
 8. **Charging access** (default: straight micro-USB cable reaches the hub without removing parts):
-9. **Inventory and colors** (default: `profile/inventory.csv`; colors to use or avoid):
+9. **Parts and colors** (default: `PARTS_AVAILABLE.csv`, or `profile/parts.csv`; parts to add or rule out; colors to use or avoid):
 10. **Software constraints** (drive-code values that must not change, motor ports, hub orientation):
 11. **Reference designs** (`.ldr` files in `designs/` that show the style to follow):
 12. **Anything else** (missions in mind, things you've disliked in past robots…):

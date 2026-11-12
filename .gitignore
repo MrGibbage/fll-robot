@@ -5,5 +5,5 @@ __pycache__/
 /renders
 /out
 *.io
-profile/inventory.csv
+profile/parts.csv
 profile/TEAM_PROFILE.md

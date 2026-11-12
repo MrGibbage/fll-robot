@@ -4,7 +4,7 @@ General rules for designing FIRST LEGO League (FLL) competition robots: SPIKE Pr
 studless Technic, modeled in Stud.io and exchanged as LDraw (`.ldr`) files. Each rule says **why**.
 Most have an automated check in `tools/` (§13).
 
-Team-specific choices (your PTO interface, your inventory, your preferences) live in
+Team-specific choices (your PTO interface, your preferences) live in
 `profile/TEAM_PROFILE.md` (start from `TEAM_PROFILE.example.md`). Where this file says "per the team
 profile", look there.
 
@@ -69,7 +69,7 @@ Every robot starts from a brief. Use `BRIEF_TEMPLATE.md`. The inputs are:
 7. **Weights:** purpose (counterbalance heavy front attachments → back; traction → near the drive
    axle), how many, which part.
 8. **Charging:** the hub's micro-USB port must be reachable with a normal straight cable.
-9. **Inventory / colors:** what you own (`profile/inventory.csv`), colors to use or avoid.
+9. **Parts / colors:** the parts available (`PARTS_AVAILABLE.csv`, or the team's own `profile/parts.csv`), colors to use or avoid.
 10. **Software:** values your drive code needs (wheel diameter, track width, motor ports and
     directions, hub orientation for buttons, display and gyro).
 
@@ -87,10 +87,12 @@ Every robot starts from a brief. Use `BRIEF_TEMPLATE.md`. The inputs are:
 | Caster wheel 4185 | ⌀60, 10 wide | |
 | Weight brick 73090b | 120×52×40 | Often mounted in ways Stud.io can't model. Reserve space. |
 
-Everything else: **`PARTS_CATALOG.md`** (size, through-holes per direction, built-in pins,
-inventory tray, notes). If a spot needs "a piece with a sideways hole here and a pin hole there",
-search its Holes column. **Design with owned parts.** `tools/ldbom.py` lists a model's parts by tray
-and flags anything not owned, which must be called out as "needs ordering".
+Everything else: **`PARTS_CATALOG.md`**, which covers every part in the parts list (size,
+through-holes per direction, built-in pins, notes). If a spot needs "a piece with a sideways hole here and a pin hole there",
+search its Holes column. **Design only with parts in the parts list** (`PARTS_AVAILABLE.csv`, or
+`profile/parts.csv` if the team has its own); it is the full set available, not just what past designs
+used. `tools/ldbom.py` lists a model's parts by category and flags anything not in the list, which must
+be called out as "needs ordering".
 
 ## 4b. Feasibility: is the brief even possible?
 
@@ -219,7 +221,7 @@ python -I tools/ldpinsout.py MODEL.ldr      # pins sticking out of the walls
 python tools/ldsym.py     MODEL.ldr         # left/right mirror twins
 python -I tools/ldclear.py MODEL.ldr        # hub charge port + side-port clearance
 python -I tools/ldfree.py MODEL.ldr x0 x1 y0 y1 z0 z1   # free space (pockets)
-python -I tools/ldbom.py  MODEL.ldr         # parts by tray; flags anything not owned
+python -I tools/ldbom.py  MODEL.ldr         # parts by category; flags anything not in the parts list
 python tools/ldrender.py  MODEL.ldr out.png --view iso [--highlight PART]
 ```
 
