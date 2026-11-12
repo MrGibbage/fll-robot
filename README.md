@@ -71,7 +71,8 @@ about. A brief only needs to say what's **different** for one robot.
 ### The brief: this robot
 
 Fill in what you know and leave the rest blank; blanks fall back to the team profile, and the agent
-will tell you which defaults it used. Be specific where it matters to you: "56 mm wheels, max
+will tell you which defaults it used. You don't need everything up front: much of it gets settled
+during the rounds and the real build ("the drive cables don't reach port A"), and you add it then. Be specific where it matters to you: "56 mm wheels, max
 width 22 studs, the existing attachments from 2025 must still fit" helps more than "a fast robot".
 Write **why** when you have a reason ("weights counterbalance heavy front attachments"): the agent
 makes better trade-offs when it knows the purpose.
