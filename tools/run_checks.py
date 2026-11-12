@@ -3,7 +3,7 @@
 import sys, os, subprocess
 here=os.path.dirname(os.path.abspath(__file__)); py=sys.executable
 if len(sys.argv)<2: sys.exit('usage: run_checks.py MODEL.ldr [-v]')
-model=sys.argv[1]; verbose='-v' in sys.argv
+model=os.path.abspath(sys.argv[1]); verbose='-v' in sys.argv
 CHECKS=[('connections / collisions / tires','ldcheck.py',[]),('brick bond (seams)','ldseam.py',[]),
         ('empty wall holes','ldholes.py',[]),('pin anchoring (>=2 spread)','ldanchor.py',[]),
         ('pins sticking out','ldpinsout.py',['-I']),('mirror symmetry','ldsym.py',[]),
