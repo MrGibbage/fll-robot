@@ -62,7 +62,7 @@ def desc(ref):
         tgt=d.split()[-1]+'.dat'; q=find(tgt); d=(open(q,errors='replace').readline()[2:].strip() if q else d)+f' (={tgt[:-4]})'
     return d.replace('|','/')
 # usage counts across the models in designs/
-from config import DESIGNS, REPO, KIT
+from config import DESIGNS, REPO, KIT, CATALOG_OUT
 import glob
 use=collections.Counter()
 for f in sorted(glob.glob(os.path.join(DESIGNS,'**','*.ldr'),recursive=True)+glob.glob(os.path.join(DESIGNS,'**','*.mpd'),recursive=True)):
@@ -108,5 +108,5 @@ for gname,items in GROUPS:
         bp=builtin_pins(ref)
         out.append(f'| {pn} | {desc(ref)[:60]} | {size(ref)} | {hs} | {bp or ""} | {use.get(pn,"") or ""} | {tray(pn)} | {note} |')
     out.append('')
-open(os.path.join(REPO,'PARTS_CATALOG.md'),'w').write('\n'.join(out)+'\n')
-print('wrote PARTS_CATALOG.md', sum(len(i) for _,i in GROUPS),'parts')
+open(CATALOG_OUT,'w').write('\n'.join(out)+'\n')
+print('wrote',CATALOG_OUT, sum(len(i) for _,i in GROUPS),'parts')
