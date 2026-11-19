@@ -6,7 +6,7 @@ import sys, os, re, functools, argparse
 from collections import defaultdict
 import numpy as np
 sys.path.insert(0, os.path.dirname(__file__))
-from ldflat import find, load
+from ldflat import find, load, _official
 
 HOLE = re.compile(r'^(beamhol|connhol|npeghol|peghole|axlehol\d|axl\dhol|axlehole|axleho\d|connhole)', re.I)
 # shaft parts: pins/axles. axis = longest bbox dim of the part geometry
@@ -36,11 +36,21 @@ def geom_vertices(name, M=np.eye(3), P=np.zeros(3), depth=0, out=None):
     return out
 
 @functools.lru_cache(None)
-def part_bores(name):
-    """holes in part-local coords: list of (point_on_axis, unit_axis, lo, hi)"""
+def part_bore_features(name):
+    """Official hole primitives with local position, axis, span and pin/axle type."""
     res=[]
     def walk(nm,M,P,d):
-        kids=load(nm)
+        # Holes always come from official primitives, independent of display geometry.
+        source=_official(nm.replace('\\','/').lower())
+        path=source or find(nm)
+        if not path: return
+        kids=[]
+        with open(path,encoding='utf-8',errors='replace') as source_file:
+            for line in source_file:
+                t=line.split()
+                if len(t)>=15 and t[0]=='1':
+                    v=list(map(float,t[2:14]))
+                    kids.append((' '.join(t[14:]),np.array(v[3:]).reshape(3,3),np.array(v[:3])))
         if kids is None or d>12: return
         for sub,m,p in kids:
             M2=M@m; P2=M@p+P
@@ -51,11 +61,18 @@ def part_bores(name):
                 if vs:
                     pr=[float(np.dot(v-P2,ax)) for v in vs]; lo,hi=min(pr),max(pr)
                 else: lo,hi=0.0,float(np.linalg.norm(M2@np.array([0,1.,0])))
-                res.append((P2,ax,lo,hi))
+                kind='axle' if re.match(r'^(axle|axl)',b) else 'negative' if b.startswith('npeghol') else 'pin'
+                res.append((P2,ax,lo,hi,kind))
             else:
                 walk(sub,M2,P2,d+1)
-    walk(name,np.eye(3),np.zeros(3),0)
+    source={'bb1142c01.dat':'45601.dat','55422c01.dat':'45610.dat'}.get(name,name)
+    walk(source,np.eye(3),np.zeros(3),0)
     return res
+
+
+@functools.lru_cache(None)
+def part_bores(name):
+    return tuple(feature[:4] for feature in part_bore_features(name))
 
 
 @functools.lru_cache(None)
@@ -82,6 +99,21 @@ def merged_bores(name, gap=21.0):
     return tuple(out)
 
 @functools.lru_cache(None)
+def typed_bores(name):
+    """Merged bores with the intersecting official primitive's hole type."""
+    out=[]
+    for q,a,lo,hi in merged_bores(name):
+        kinds=set()
+        for r,b,rl,rh,kind in part_bore_features(name):
+            if abs(a@b)<.98:continue
+            d=r-q
+            if np.linalg.norm(d-(d@a)*a)>1:continue
+            t=d@a;sg=np.sign(a@b);l,h=sorted((t+sg*rl,t+sg*rh))
+            if min(hi,h)-max(lo,l)>.01:kinds.add(kind) # end-ring primitives can be only 2 LDU deep
+        out.append((q,a,lo,hi,'axle' if 'axle' in kinds else 'pin' if 'pin' in kinds else 'negative'))
+    return tuple(out)
+
+@functools.lru_cache(None)
 def shaft_def(name):
     vs=np.array(geom_vertices(name))
     lo,hi=vs.min(0),vs.max(0); ext=hi-lo; i=int(np.argmax(ext))
@@ -94,9 +126,7 @@ def parse_model(path):
         t=line.split()
         if len(t)>=3 and t[0]=='0' and t[1]=='FILE':
             cur=' '.join(t[2:]); models[cur]=[]; order.append(cur); continue
-        if len(t)>=15 and t[0]=='1':
-            if cur is None:                                  # plain single-model file: no 0 FILE header
-                cur=os.path.basename(path); models[cur]=[]; order.append(cur)
+        if len(t)>=15 and t[0]=='1' and cur is not None:
             v=list(map(float,t[2:14]))
             models[cur].append((int(t[1]),np.array([[v[3],v[4],v[5]],[v[6],v[7],v[8]],[v[9],v[10],v[11]]]),np.array(v[:3]),' '.join(t[14:])))
     return models,order
@@ -119,6 +149,85 @@ def flatten_model(models,order,path):
     walk(order[0],np.eye(3),np.zeros(3),[],0)
     return parts
 
+def rim_tire_pairs(parts):
+    """Only the specified matching rim/tire, concentric and coaxial, is a press-fit.
+    Tires have no bores, so the shaft graph alone cannot connect them.
+    """
+    pairs = {'44771.dat': '15038p01.dat', '41897.dat': '41896.dat'}
+    result = []
+    for tire in parts:
+        rim_ref = pairs.get(tire['ref'])
+        if rim_ref is None:
+            continue
+        for rim in parts:
+            if rim['ref'] != rim_ref:
+                continue
+            if np.linalg.norm(tire['P'] - rim['P']) > 1.0:
+                continue
+            if abs(tire['M'][:, 2] @ rim['M'][:, 2]) < .999:
+                continue
+            result.append((tire['id'], rim['id']))
+    return result
+
+def hub_battery_pairs(parts):
+    """A SPIKE battery clips into its matching hub at the same origin and rotation."""
+    return [(h['id'],b['id']) for h in parts for b in parts
+            if h['ref']=='bb1142c01.dat' and b['ref']=='55422c01.dat'
+            and np.linalg.norm(h['P']-b['P'])<1
+            and np.allclose(h['M'],b['M'],atol=1e-4)]
+
+@functools.lru_cache(None)
+def builtin_pin_defs(ref):
+    """Local shaft segments for molded pins on the small 3L cross blocks."""
+    if ref not in ('2393.dat','48989.dat'):return ()
+    from ldflat import flatten
+    out=[]
+    for primitive,m,p in flatten(ref,keep=re.compile(r'^connect\d*\.dat$',re.I)):
+        v=np.array(geom_vertices(primitive));lo=v.min(0);hi=v.max(0)
+        axis=np.eye(3)[int(np.argmax(hi-lo))]
+        center=m@((lo+hi)/2)+p;axis=m@axis;axis/=np.linalg.norm(axis)
+        world=v@m.T+p;pr=(world-center)@axis
+        out.append((center,axis,float(pr.min()),float(pr.max())))
+    return tuple(out)
+
+def builtin_pin_segments(part):
+    return [(part['M']@q+part['P'],part['M']@a,lo,hi)
+            for q,a,lo,hi in builtin_pin_defs(part['ref'])]
+
+def world_bores(parts):
+    out=[]
+    for p in parts:
+        if p['ref'].replace('.dat','') in SHAFTS-HOLED_SHAFTS:continue
+        fx=STUDIO_FIX.get(p['ref'],np.zeros(3))
+        for q,a,lo,hi,kind in typed_bores(p['ref']):
+            if kind=='negative':continue
+            out.append((p['id'],p['M']@(q+fx)+p['P'],p['M']@a,lo,hi))
+    return out
+
+def connection_records(parts):
+    """Shaft contacts, including molded pins, shared by support/rigidity checks."""
+    bores=world_bores(parts)
+    if not bores:return []
+    pts=np.array([b[1] for b in bores]);axes=np.array([b[2]/np.linalg.norm(b[2]) for b in bores])
+    records=[]
+    for p in parts:
+        segments=[]
+        if p['ref'].replace('.dat','') in SHAFTS:
+            c,a,lo,hi=shaft_def(p['ref']);segments.append((p['M']@c+p['P'],p['M']@a,lo,hi,None,p['id']))
+        for j,(c,a,lo,hi) in enumerate(builtin_pin_segments(p)):
+            segments.append((c,a,lo,hi,p['id'],('built',p['id'],j)))
+        for c,a,lo,hi,owner,key in segments:
+            a=a/np.linalg.norm(a);d=pts-c
+            par=np.abs(axes@a)>.98;distance=np.linalg.norm(d-np.outer(d@a,a),axis=1)
+            hits=set()
+            for j in np.where(par&(distance<2.5))[0]:
+                pid,q,ba,bl,bh=bores[j]
+                if pid==p['id']:continue
+                origin=(q-c)@a;sg=np.sign(ba@a);b0,b1=sorted((origin+sg*bl,origin+sg*bh))
+                if min(hi,b1)-max(lo,b0)>3:hits.add(pid)
+            records.append(dict(part=p,key=key,owner=owner,center=c,axis=a,lo=lo,hi=hi,hits=hits))
+    return records
+
 def main():
     ap=argparse.ArgumentParser(); ap.add_argument('model'); ap.add_argument('--verbose','-v',action='store_true')
     ap.add_argument('--part',help='show links for parts matching this ref')
@@ -132,7 +241,8 @@ def main():
         if b0 in SHAFTS and b0 not in HOLED_SHAFTS: continue
         if not find(p['ref']): continue
         fx=STUDIO_FIX.get(p['ref'],np.zeros(3))
-        for (q,ax,lo,hi) in merged_bores(p['ref']):
+        for (q,ax,lo,hi,kind) in typed_bores(p['ref']):
+            if kind=='negative':continue
             bores.append((p['id'],p['M']@(q+fx)+p['P'],p['M']@ax,lo,hi))
     B_pts=np.array([b[1] for b in bores]) if bores else np.zeros((0,3))
     B_ax=np.array([b[2]/np.linalg.norm(b[2]) for b in bores]) if bores else np.zeros((0,3))
@@ -153,6 +263,12 @@ def main():
             if ov>3 and pid!=p['id']: hit.add(pid)
         for h in hit: links[p['id']].add(h); links[h].add(p['id'])
         shaft_report.append((p,hit))
+    for a_id, b_id in rim_tire_pairs(parts)+hub_battery_pairs(parts):
+        links[a_id].add(b_id); links[b_id].add(a_id)
+    built_records=[r for r in connection_records(parts) if r['owner'] is not None]
+    for r in built_records:
+        for other in r['hits']:
+            links[r['owner']].add(other);links[other].add(r['owner'])
     # components
     seen={}; comps=[]
     for p in parts:
@@ -179,6 +295,9 @@ def main():
     for p_,hit in shaft_report:
         c,ax,lo,hi=shaft_def(p_['ref']); wc=p_['M']@c+p_['P']; wa=p_['M']@ax; wa/=np.linalg.norm(wa)
         sh.append((p_,wc,wa,lo,hi))
+    for r in built_records:
+        label=dict(r['part']);label['ref']+=' (built-in pin)'
+        sh.append((label,r['center'],r['axis'],r['lo'],r['hi']))
     nso=0
     for i in range(len(sh)):
         for j in range(i+1,len(sh)):
@@ -252,4 +371,5 @@ def main():
                     others=[parts[o]['ref'] for o in links[s] if o!=p['id']]
                     nb.append(f"{parts[s]['ref']}@({parts[s]['P'][0]:.0f},{parts[s]['P'][1]:.0f},{parts[s]['P'][2]:.0f})->{others}")
                 print(f"  {p['ref']} @({p['P'][0]:.0f},{p['P'][1]:.0f},{p['P'][2]:.0f}) via {len(nb)} shafts:"); [print('     ',n) for n in nb]
+    sys.exit(int(bool(missing) or len(comps)>1 or nso>0 or ncol>0 or any(len(hit)<2 for _,hit in shaft_report)))
 if __name__=="__main__": main()

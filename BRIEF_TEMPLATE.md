@@ -1,54 +1,36 @@
 # Robot design brief
 
-Copy this file to `briefs/<robot-name>.md`, fill it in, and point the agent at it. Leave an item
-blank to use the default from your team profile. Say **why** where you have a reason.
+Copy this into `designs/PROJECT_brief.md`. Fill only the differences from your team profile.
+Plain language is sufficient; the agent resolves part numbers and records its assumptions.
 
-**You don't have to answer everything.** Every item here matters eventually, but most get settled
-along the way, often once the robot is being built. For example: you didn't say the drive motor
-cables *must* go in ports A and E. Then the first build shows they don't reach, so the design
-changes. That's normal. Fill in what you know and care about now; the agent uses defaults for the
-rest, says which ones it used, and you add to the brief as you learn.
+1. **Robot goal / reference style:**
+2. **Wheels:** profile preset, or a description / rim and tire numbers:
+3. **Drive layout:** front / middle / rear (profile default if blank):
+4. **Size:** target width × length × overall height; hard maximum; permitted flexibility:
+5. **Walls and ground clearance:**
+   - Total wall layers, if important (separate from overall robot height):
+   - Complete wall layers **below the drive axle center**, if important:
+   - Clearance: about one full beam (8 mm), **at least** 8 mm everywhere, obstacle clearance, or other:
+   - If layer count and clearance conflict, which governs? Clearance / layer count / ask me:
+   - Notes: one layer containing the axle does not count as below it. Measure clearance to the
+     actual resting contact plane, including caster-induced pitch, not the floor of an unpitched render.
+6. **PTO / attachments:**
+   - Number of motors, output direction, coupling, and mounting style (profile defaults if blank):
+   - Must existing attachments fit? If yes, name the reference model/interface:
+7. **Attachment-ID sensor:** yes/no; up/forward; existing position must be preserved?:
+8. **Weights:** purpose, count, part/preset; reserve space only or model a verified mount?:
+9. **Charging:** normal straight cable without removing parts (default), or other:
+10. **Colors:** e.g. “blue wall beams; preserve the usual colors of constrained parts.”
+    Use “must/only” for a hard requirement. Per-color inventory counts are optional.
+11. **Inventory / buying policy:** team inventory by default; may any missing parts be ordered?:
+12. **Software:** hub orientation, ports or other existing-code constraints:
+13. **References:** `.ldr` files and/or pictures; identify the latest file to preserve:
+14. **Other preferences:**
 
-**Robot name:**
+Common building defaults belong in the team profile and DESIGN_RULES, not in repeated user prompts:
+minimize rare/expensive alternating-hole beams where ordinary beams and small perpendicular
+connectors work; use rigid, continuous front-to-rear motor bracing rather than short pivot links.
 
-1. **Wheels and tires** (part numbers, or "same as <design>"):
-2. **Drive layout** (front / mid / rear wheel drive):
-3. **Size limits** (max width × length × height, in studs or mm; note any season rules):
-4. **Ground clearance** (default: a liftarm slides under; "+1 level" for driving over obstacles):
-5. **PTO**
-   - number of accessory motors:
-   - output direction (up / forward / …):
-   - spacing and position:
-   - coupling (e.g. 12T double-bevel on a 4L axle):
-   - how attachments locate and stay on:
-   - must existing attachments still fit? (if yes, attach or name the reference design):
-6. **Attachment ID sensor** (yes/no; facing up / forward; where):
-7. **Weights** (purpose: counterbalance / traction; how many; part):
-8. **Charging access** (default: straight micro-USB cable reaches the hub without removing parts):
-9. **Parts and colors** (default: `PARTS_AVAILABLE.csv`, or `profile/parts.csv`; parts to add or rule out; colors to use or avoid):
-10. **Software constraints**: the numbers your program depends on, which would break if the build
-    changed underneath it. List the ones that **must not change**; leave out what's easy to change
-    in your code.
-    - *Wheel diameter*: distance moves convert wheel turns into distance; 56 mm → 88 mm wheels makes
-      every straight move about 1.6× too long.
-    - *Track width* (distance between the drive wheels): turns by wheel rotation depend on it.
-    - *Motor ports*: which port each motor uses, and whether its cable reaches that port.
-    - *Motor directions*: a motor mounted the other way spins backwards for the same command
-      (mirrored drive motors usually need one reversed).
-    - *Hub orientation*: the gyro's axes and the display follow the hub; turn the hub 180° and yaw
-      flips, tilt readings change sign, and the display is upside down.
-    - *Attachment motors*: which port drives which PTO output, and which way is "up" or "close".
-
-    How hard these are to change depends on your software. Some (Pybricks, for example) make it a
-    one-line setting to reverse a motor or rotate the display, so the design is freer. Any
-    programming environment works with this repo; just say which values are fixed for you.
-    Example: "keep 56 mm wheels and 14.5 cm track width; drive motors on A and E."
-    -
-11. **Reference designs** (`.ldr` files in `designs/`; say which one, if any, to start from):
-12. **Photos** (folder, then one line per photo: file, what it shows, and **reference** / **match** /
-    **inspiration**; unlabeled = inspiration):
-    - `photos/<robot-name>/top.jpg`: current robot from above, reference
-13. **Missions** (which field models the robot must reach, push or lift; heights and distances):
-14. **Builders and time** (experience, build deadline):
-15. **Problems with past robots** (drift, caster catching, attachments falling off…):
-16. **Anything else**:
+Example of precise wall placement: “Use six full wall layers, with three complete layers below
+the drive axle. Treat about one beam of ground clearance as a preference.” This is different from
+“Maintain at least 8 mm under every wall edge”; the agent must check whether both are feasible.

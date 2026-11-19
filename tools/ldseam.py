@@ -24,7 +24,11 @@ for p in parts:
 def owner(c): s=own.get(c); return min(s) if s else None
 walls={'left wall':[(LX,0,z) for z in range(FZ,RZ+st,st)],'right wall':[(RX,0,z) for z in range(FZ,RZ+st,st)],
        'front F1':[(x,0,FZ) for x in range(LX,RX+1,20)],'rear':[(x,0,RZ) for x in range(LX,RX+1,20)]}
-LV={l:int(FR['Y1'])-20*(l-1) for l in range(1,8)}
+# Attachment frames above the side-wall top are not extra wall layers.
+side_y=[c[1] for c in own if c[0] in (LX,RX)]
+top=min(side_y)
+nlevels=int(round((FR['Y1']-top)/20))+1
+LV={l:int(FR['Y1'])-20*(l-1) for l in range(1,nlevels+1)}
 total=0
 for wname,cells in walls.items():
     joints={}
@@ -39,10 +43,12 @@ for wname,cells in walls.items():
                 js.add(i)
         joints[l]=js
     bad=[]
-    for l in range(1,7):
+    for l in range(1,nlevels):
         for i in sorted(joints[l]&joints[l+1]):
             c1=(cells[i][0],LV[l],cells[i][2]); c2=(cells[i+1][0],LV[l],cells[i+1][2])
             bad.append(f"lvl{l}-{l+1} between {name(np.array(c1)).split()[0 if 'wall' not in wname else 1]} and {name(np.array(c2)).split()[0 if 'wall' not in wname else 1]}")
     total+=len(bad)
     print(f"{wname}: {'no shared seams' if not bad else str(len(bad))+' shared seams'}"); [print('   ',b) for b in bad]
 print("(rows that aren't walls, e.g. stacked PTO frames or an open charging slot, can show seams: judge those yourself)")
+
+sys.exit(int(total>0))

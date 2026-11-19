@@ -31,14 +31,18 @@ for p in parts:
     if abs(a[1])<0.9: continue
     for y in np.arange(min((w+a*lo)[1],(w+a*hi)[1])+10, max((w+a*lo)[1],(w+a*hi)[1]), 20):
         filled.add((int(round(w[0]/10))*10,int(round(y/10))*10,int(round(w[2]/10))*10))
-import re
-from ldflat import flatten
-from ldcheck import geom_vertices
-for p in parts:                      # built-in pins (e.g. 2393 cross block) fill holes too
-    if not find(p['ref']) or p['ref'].replace('.dat','') in SHAFTS: continue
-    for b,m_,p_ in flatten(p['ref'],keep=re.compile('connect',re.I)):
-        w=np.array(geom_vertices(b))@m_.T+p_; w=w@p['M'].T+p['P']; c=w.mean(0)
-        filled.add((int(round(c[0]/20))*20,int(round((c[1]-10)/20))*20+10,int(round((c[2]-10)/20))*20+10))
+from ldcheck import builtin_pin_segments
+for p in parts:
+    for c,a,lo,hi in builtin_pin_segments(p):
+        if abs(a[1])<.9:continue
+        y0,y1=sorted(((c+a*lo)[1],(c+a*hi)[1]))
+        for y in np.arange(y0+10,y1,20):
+            filled.add((int(round(c[0]/10))*10,int(round(y/10))*10,int(round(c[2]/10))*10))
 empty=sorted(set(holes)-filled,key=lambda c:(c[2],c[0],c[1]))
 print(f"{len(holes)} vertical wall holes, {len(holes)-len(empty)} pinned, {len(empty)} empty")
-for c in empty: print(f"  {name(np.array(c,float)):22s} in {holes[c]}")
+isolated=[c for c in empty if (c[0],c[1]-20,c[2]) not in holes and (c[0],c[1]+20,c[2]) not in holes]
+required=[c for c in empty if c not in isolated]
+print(f'{len(isolated)} isolated holes (allowed); {len(required)} unfilled holes with a neighbor')
+for c in required: print(f"  {name(np.array(c,float)):22s} in {holes[c]}")
+
+sys.exit(int(bool(required)))

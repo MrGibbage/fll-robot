@@ -25,3 +25,5 @@ for p in parts:
 print(f"{len(miss)} parts without a mirror twin (centerline X={a.cx}):")
 for p in sorted(miss,key=lambda p:(p['P'][2],p['P'][0])):
     print(f"  {p['ref']:12s} at {name(p['P'])}   (twin would be at {name(np.array([2*a.cx-p['P'][0],p['P'][1],p['P'][2]]))})")
+
+sys.exit(int(bool(miss)))

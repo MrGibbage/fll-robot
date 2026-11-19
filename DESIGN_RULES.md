@@ -4,7 +4,7 @@ General rules for designing FIRST LEGO League (FLL) competition robots: SPIKE Pr
 studless Technic, modeled in Stud.io and exchanged as LDraw (`.ldr`) files. Each rule says **why**.
 Most have an automated check in `tools/` (§13).
 
-Team-specific choices (your PTO interface, your preferences) live in
+Team-specific choices (your PTO interface, your inventory, your preferences) live in
 `profile/TEAM_PROFILE.md` (start from `TEAM_PROFILE.example.md`). Where this file says "per the team
 profile", look there.
 
@@ -61,22 +61,22 @@ Every robot starts from a brief. Use `BRIEF_TEMPLATE.md`. The inputs are:
 2. **Drive layout:** front / mid / rear wheel drive. Mid pivots about the robot's center.
 3. **Size envelope:** max width, length, height (launch area + height limit + your own limits).
    Drives the layout choice (§4b, §5).
-4. **Ground clearance:** default *a liftarm slides under the robot*. For obstacles, raise the walls
-   by one level.
+4. **Wall placement and ground clearance:** distinguish total wall layers, complete layers below
+   the drive axle center, and the actual floor-to-wall distance. “A liftarm slides under” means
+   a minimum 8 mm; “about one beam” is a target, not the same requirement. Include caster pitch
+   and measure the lowest wall edge. If an exact layer count conflicts with clearance, resolve
+   the priority during feasibility; do not silently claim both. Lower walls reduce clearance;
+   raising the chassis relative to its wheels increases it.
 5. **PTO design:** number of accessory motors, output direction, spacing and position, coupling
    (gear type), how attachments locate and stay on, whether existing attachments must still fit.
 6. **Attachment ID sensor:** yes/no, facing up or forward, where.
 7. **Weights:** purpose (counterbalance heavy front attachments → back; traction → near the drive
    axle), how many, which part.
 8. **Charging:** the hub's micro-USB port must be reachable with a normal straight cable.
-9. **Parts / colors:** the parts available (`PARTS_AVAILABLE.csv`, or the team's own `profile/parts.csv`), colors to use or avoid.
+9. **Inventory / colors:** what you own (`profile/inventory.csv`), plus broad colors to use or avoid.
+   Per-color quantities are optional and only needed for a requested strict stock audit.
 10. **Software:** values your drive code needs (wheel diameter, track width, motor ports and
     directions, hub orientation for buttons, display and gyro).
-11. **Reference designs and photos:** which `.ldr` to start from, if any. Each photo is labeled
-    reference (the starting point), match (copy this feature) or inspiration (borrow the idea).
-    Unlabeled means inspiration. Photos can't give a part-for-part copy (hidden parts).
-12. **Missions, builders, past problems:** what the robot must reach or lift; who builds it and by
-    when; what went wrong with earlier robots.
 
 ## 4. Component reference
 
@@ -92,12 +92,10 @@ Every robot starts from a brief. Use `BRIEF_TEMPLATE.md`. The inputs are:
 | Caster wheel 4185 | ⌀60, 10 wide | |
 | Weight brick 73090b | 120×52×40 | Often mounted in ways Stud.io can't model. Reserve space. |
 
-Everything else: **`PARTS_CATALOG.md`**, which covers every part in the parts list (size,
-through-holes per direction, built-in pins, notes). If a spot needs "a piece with a sideways hole here and a pin hole there",
-search its Holes column. **Design only with parts in the parts list** (`PARTS_AVAILABLE.csv`, or
-`profile/parts.csv` if the team has its own); it is the full set available, not just what past designs
-used. `tools/ldbom.py` lists a model's parts by category and flags anything not in the list, which must
-be called out as "needs ordering".
+Everything else: **`PARTS_CATALOG.md`** (size, through-holes per direction, built-in pins,
+inventory tray, notes). If a spot needs "a piece with a sideways hole here and a pin hole there",
+search its Holes column. **Design with owned parts.** `tools/ldbom.py` lists a model's parts by tray
+and flags anything not owned, which must be called out as "needs ordering".
 
 ## 4b. Feasibility: is the brief even possible?
 
@@ -116,6 +114,24 @@ tire, ≈3 for 28 mm).
 - The core parts (hub, 2 large motors, 2 medium motors, sensor) take ~900 stud³ before any structure.
 - If the envelope is below a layout's minimum, change the layout (B is narrower but taller and
   longer) or the wheels (*S*). Otherwise, say plainly that the brief is impossible.
+
+## 4c. Color defaults and user palettes
+
+Users may give a simple palette, such as “red wall beams, gray frames.” Do not make a detailed
+color inventory a prerequisite. Use verified catalog facts for constrained part colors and
+known-working exports for appropriate defaults (including inherited colors on multi-color
+electronics). A DAT's ability to render a color is not evidence of production availability.
+One observed color is also not evidence that a part has only ever been produced in that color.
+
+Apply the requested palette to eligible structural parts. Pins, axles, bushings, electronics,
+and functionally meaningful attachment-ID colors keep their verified variant/reference colors
+unless an appropriate substitution is established. “Walls red” normally describes a preference
+for wall beams, not a request to recolor the pins or electronics. Explicit “must/only” requirements
+are hard constraints; report a conflict instead of inventing an unavailable combination.
+
+When repairing a user's recolored export, preserve its colors. Give new parts colors consistent
+with the same part/role in that reference. Report a short list of palette exceptions and any
+unverified availability; do not call color stock verified when no color stock was supplied.
 
 ## 5. Layout decisions
 
@@ -143,7 +159,20 @@ tire, ≈3 for 28 mm).
 - **Mount through the wall:** motors, axles and sensors attach through wall pieces with perpendicular
   holes (alternating-hole liftarms, cross blocks, frames), not hung from beams underneath.
 - **Axles through walls** use a sideways hole of an alternating-hole liftarm.
-- **Don't use a liftarm longer than its pins need.** Prefer fewer, longer pieces over many short ones.
+- **Economical mounting:** alternating-hole beams (especially 71710 and similar) are relatively
+  rare/expensive for this team. Minimize their use as a preference, not a hard inventory cap.
+  At each sideways mount, consider ordinary beams plus 87082, 15100, 32184, 42003, 2393 or 48989.
+  Search part descriptions for “perpendicular”; verify axes and built-in pins before using a part.
+  **Audit actual directional use:** count the distinct sideways holes used and their spacing
+  along the beam. Filling its vertical holes is not enough justification; ordinary beams can
+  carry those pins. Zero or one used sideways hole is a red flag for a compact connector. If
+  only one hole direction is needed, first try an ordinary beam oriented that way. Remove spacer
+  layers that existed only to pin an unnecessary mixed-hole stack, provided independent strong
+  load paths remain. `ldrare.py` reports this as an advisory, not a hard stock quota.
+  Compare stiffness, part count and assembly access rather than mechanically replacing every
+  alternating beam. Retain one where it is the cleanest strong solution.
+- **Don't use a liftarm longer than its structure needs.** Prefer fewer, longer pieces over many
+  short ones. A continuous motor rail is structurally useful even when some holes stay unused.
 - **Avoid 1L liftarms.** No strength. Only as a last-resort filler or to cap an exposed pin.
 
 ## 7. Pins
@@ -152,6 +181,23 @@ tire, ≈3 for 28 mm).
 - **Every piece needs at least TWO pins into other parts, spread along it.** A piece on one pin spins;
   two pins close together on a long liftarm barely help. Exceptions: gears on their axle, 1L pieces.
   (`ldanchor.py`)
+  **Pin count alone does not establish rigidity:** a short link with one pin into each of two
+  separate supports can hinge at both ends. Motor retainers need two spaced pins into a common
+  rigid support, an appropriately anchored L/frame, or a continuous front-to-rear rail. Prefer a
+  15L rail when it fits; use the longest appropriate continuous span that avoids neighboring parts
+  instead of a series of 2L pivot links. `ldmotorbrace.py` checks this specific top-retainer risk;
+  it is not a general mechanism/strength solver.
+- **Connect aligned mating holes by default.** Whenever two or more neighboring parts have
+  compatible, usable coaxial holes, normally join them. Check all axes and electronics mounting
+  holes, not only vertical wall columns. For example, a longitudinal rail aligned with the SPIKE
+  drive motor at F8/F10/F14/F16 should be pinned directly into the motor. Use 2L/3L pins for
+  suitable two-/three-part stacks, or an axle-pin where appropriate. Respect existing shafts,
+  deliberate staggered breaks, blind-hole depth, moving parts and insertion access. Exceptions
+  should be uncommon and explained at their location. `ldaligned.py` checks free adjacent
+  pin/pin and pin/axle pairs; it does not infer arbitrary axle-retention or motion designs.
+- **Hole primitives need interpretation.** A negative relief (`npeghol*`) by itself is not proof
+  of a usable hole. Conversely, two thin positive end rings can define a real through-hole.
+  Use typed official hole evidence; do not add pins to cosmetic recesses or cross-profile axle holes.
 - **Stagger the pin breaks (1-2-3).** Vary where each column's pins end, so the levels are bridged at
   different heights in neighboring columns. Per column of stacked vertical holes:
   - 5 levels: alternate 3L+2L and 2L+3L
@@ -176,8 +222,14 @@ tire, ≈3 for 28 mm).
 - **Wheels are mirror images.** Dished rims: turn the left wheel 180° relative to the right.
 - **Lock each wheel along its axle with bushings**, with no slop, e.g. from the motor face out:
   half bush · rim hub · full bush · full bush · half bush · wall.
-- **Tires must clear everything.** `ldcheck.py` models each tire as a solid ring.
-- **Ground clearance:** nothing structural hangs below the wall's bottom level.
+- **Tires and passive rollers must clear every neighboring part.** `ldcheck.py` checks the drive tires;
+  `ldwheelclear.py` checks the swept disk of small 4185 rollers, including beams behind them.
+  Spoke openings are not usable clearance on a rotating wheel. Check triangle faces, not only
+  vertices or hole centers; broad beam faces can enter the disk with no vertex inside it.
+- **Ground clearance:** nothing structural hangs below the wall's bottom level. `ldground.py`
+  checks this, counts complete wall courses below the axle, and measures the pitched contact plane.
+  Declare exact wall courses with `0 !FLL WALL_ROWS_BELOW_AXLE N` and a hard minimum, when required,
+  with `0 !FLL MIN_GROUND_CLEARANCE mm`. Do not infer an 8 mm guarantee from a layer count.
 - The caster's bottom vs the tires' bottom only tilts the robot (two tires plus a caster always all
   touch). Keep it close.
 
@@ -218,23 +270,53 @@ tire, ≈3 for 28 mm).
 
 ```bash
 python tools/run_checks.py MODEL.ldr        # runs all of the below and summarizes
+python tools/ldstudio.py  MODEL.ldr         # SPIKE IDs matching working Stud.io exports
+python tools/ldground.py  MODEL.ldr         # below-axle rows, contact plane, structural underside
+python tools/ldsize.py    MODEL.ldr         # explicit 0 !FLL ENVELOPE W L H limits (studs)
 python tools/ldcheck.py   MODEL.ldr         # connections, floating parts, doubled pins, collisions incl. tires
+python tools/ldwheelclear.py MODEL.ldr      # 4185 roller swept disks vs triangle faces
 python tools/ldseam.py    MODEL.ldr         # brick bond
 python tools/ldholes.py   MODEL.ldr         # empty vertical wall holes (should be isolated holes only)
+python tools/ldaligned.py MODEL.ldr         # free aligned compatible mating holes
+python tools/ldrare.py    MODEL.ldr         # advisory: used vertical/sideways holes and span
+python tools/ldmotorbrace.py MODEL.ldr      # short motor links that can hinge
 python tools/ldanchor.py  MODEL.ldr         # every piece held by >= 2 well-spread pins
 python -I tools/ldpinsout.py MODEL.ldr      # pins sticking out of the walls
 python tools/ldsym.py     MODEL.ldr         # left/right mirror twins
 python -I tools/ldclear.py MODEL.ldr        # hub charge port + side-port clearance
+python -I tools/ldfree.py MODEL.ldr         # all 0 !FLL POCKET name x0 x1 y0 y1 z0 z1 declarations
 python -I tools/ldfree.py MODEL.ldr x0 x1 y0 y1 z0 z1   # free space (pockets)
-python -I tools/ldbom.py  MODEL.ldr         # parts by category; flags anything not in the parts list
+python -I tools/ldbom.py  MODEL.ldr         # parts by tray; flags anything not owned
 python tools/ldrender.py  MODEL.ldr out.png --view iso [--highlight PART]
 ```
 
 **When a rule has no check, write one** (see `AGENTS.md`). Every tool here started as a rule that a
 person had to point out.
 
+Stud.io exports use `bb1142c01` for the hub, a separate `55422c01` battery, and
+`37308c01` for the color sensor. Do not substitute official LDraw IDs `45601c01` or
+`37308` in a Stud.io handoff merely because local tools can render them.
+
+An intentional unfilled mating pair can be recorded with
+`0 !FLL CONNECTION_EXCEPTION x y z explanation` at the proposed joint center. Do not use this to
+waive a missing ordinary structural connection. Occupied holes and deliberate pin breaks are
+excluded automatically; axle/axle joints require an explicit axle/retention design.
+
+The runner returns a nonzero status if any check fails. Empty isolated wall holes are allowed;
+attachment frames above the side-wall top are not counted as extra wall layers. The connection
+graph recognizes concentric, coaxial matching rim/tire press-fits. The official hub `45601c01`
+(including its battery) is supported alongside the Stud.io hub number. Parts ownership checks
+confirm part types, not available quantities or colors. Geometry checks prefer Stud.io where it
+is installed and otherwise use official LDraw; inspect the imported model in Stud.io as well.
+
 ## 14. Lessons learned (each cost an iteration)
 
+- Two pins into two separate supports can still make a **hinged link**. Count and spread are
+  necessary checks, not proof of a rigid motor mount.
+- A wall course **below the axle** is a full course below its center; the axle course is not one.
+  Ground clearance depends on tire radius, course position and chassis pitch.
+- Molded pins on **2393/48989** are real connections and can clash with ordinary pins. Count
+  their connections and occupancy explicitly; do not double-fill the receiving holes.
 - A hole-based checker can't see **tires** (no holes). Model them as solid rings.
 - The **alternating-hole** pattern decides which holes take vertical pins. Check before placing one.
 - A bent liftarm's **origin** is at the end of its long arm, not the corner. Don't search by origin

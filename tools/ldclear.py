@@ -8,8 +8,8 @@ from ldcheck import parse_model, flatten_model, geom_vertices
 PORT_LOCAL=np.array([0.,-70.,110.]); OUT=np.array([0.,0.,1.])   # from end-view render: 18x7 LDU opening, 10 LDU below top, +Z end
 if len(sys.argv)<2: sys.exit('usage: ldclear.py MODEL.ldr')
 m,o=parse_model(sys.argv[1]); parts=flatten_model(m,o,sys.argv[1])
-hubs=[p for p in parts if p['ref']=='bb1142c01.dat']
-if not hubs: sys.exit('no SPIKE Prime hub (bb1142c01) in this model')
+hubs=[p for p in parts if p['ref'] in ('bb1142c01.dat','45601c01.dat','45601.dat')]
+if not hubs: sys.exit('no SPIKE Prime hub in this model')
 hub=hubs[0]
 port=hub['M']@PORT_LOCAL+hub['P']; d=hub['M']@OUT
 u=np.cross(d,[0,1.,0]); u/=np.linalg.norm(u); w=np.cross(d,u)
@@ -31,6 +31,7 @@ print('nearest obstruction:', f"{best[0]:.1f} LDU = {best[0]*0.4:.1f} mm ({best[
 
 # ---- rule: long sides of the hub (motor/sensor ports A-F) need >= 1 stud (20 LDU) clear ----
 print('side ports (rule: >= 20 LDU / 1 stud clear):')
+side_bad=False
 for sx in (1,-1):
     face_local=np.array([70.*sx,0,0]); out_l=np.array([sx*1.,0,0])
     d=hub['M']@out_l
@@ -45,6 +46,9 @@ for sx in (1,-1):
         if m_.any():
             dist=a_[m_].min()
             if nearest is None or dist<nearest[0]: nearest=(dist,p['ref'],p['P'])
+    if nearest and nearest[0]<20-1e-6: side_bad=True
     side='+X (robot right)' if (hub['M']@out_l)[0]>0 else '-X (robot left)'
     if nearest: print(f"  {side}: nearest {nearest[0]:.1f} LDU ({nearest[0]/20:.2f} studs) {nearest[1]}@{nearest[2].round()}  {'OK' if nearest[0]>=20 else 'VIOLATION'}")
     else: print(f"  {side}: clear for 3 studs  OK")
+
+sys.exit(int(best is not None or side_bad))

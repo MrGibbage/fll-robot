@@ -9,28 +9,38 @@ files, check them with the tools in `tools/`, and explain the result in terms a 
 1. `DESIGN_RULES.md`: the rules, why each exists, the feasibility limits and the design procedure.
 2. `profile/TEAM_PROFILE.md` if it exists, else `profile/TEAM_PROFILE.example.md`: this team's PTO
    interface, preferences and defaults.
-3. `PARTS_CATALOG.md`: every available part (from `PARTS_AVAILABLE.csv`) with its holes and notes.
-   Use it to find "the right piece" instead of guessing. Parts not in the list are not available.
-4. The brief (usually `briefs/<robot-name>.md`, from `BRIEF_TEMPLATE.md`), and any reference designs the person gives you
+3. `PARTS_CATALOG.md`: parts with their holes, inventory trays and notes. Use it to find "the right
+   piece" instead of guessing.
+4. The brief (`BRIEF_TEMPLATE.md` filled in), and any reference designs the person gives you
    (usually in `designs/`, which is git-ignored). Study them before designing: they show the team's
    style better than any rule.
-5. Photos (usually `photos/<robot-name>/`). The brief labels each one:
-   - **reference**: the starting point. If they want that robot changed, work from its `.ldr`.
-   - **match**: reproduce that feature, fitted to the new design.
-   - **inspiration** (also the default for unlabeled photos): borrow the idea within the rules and
-     the parts list.
-   Never claim a part-for-part copy from photos: hidden pins and parts aren't visible. Say what you
-   inferred and what you assumed, and ask before copying anything exactly that isn't labeled match.
 
 ## Workflow
 
 1. **Brief.** If an item in `BRIEF_TEMPLATE.md` is missing, use the team profile's default and say
    so. Ask only for things with no sensible default.
+   Broad color instructions such as “make the wall beams red” are sufficient. Do not require a
+   color-by-color stock inventory unless the user requests a strict stock audit. Preserve verified
+   constrained-part colors and functional color IDs; apply the palette to eligible structural
+   parts. Preserve user edits to a reference model's colors when repairing its mechanics.
+   Distinguish “at least one beam of ground clearance” from an approximate one-beam target,
+   and record complete wall layers below the axle separately from total wall height.
 2. **Feasibility** (`DESIGN_RULES.md` §4b). If the brief is impossible, say so and why, with the
    nearest possible alternative. Don't design something that can't meet it.
-3. **Design** following §12 of the rules. Write the `.ldr` (primer below). Prefer modifying a
+3. **Design** following §12 of the rules. Minimize rare/expensive alternating-hole beams as a
+   qualitative preference; do not ask the user for hard quantities just to express this preference.
+   Prefer ordinary beams with verified perpendicular connectors where the resulting mount is strong.
+   Audit each alternating beam by its actually used sideways holes and their positions along
+   its length. One sideways hole is a red flag: consider a small connector, not a whole rare beam.
+   If all needed holes point the same way, try an ordinary beam in that orientation.
+   Do not mistake a short two-pin link for a rigid motor retainer.
+   Connect aligned, compatible holes in neighboring parts by default, including motor case holes
+   under rails. Use the appropriate pin/axle-pin and length; preserve deliberate pin staggering,
+   blind-hole limits, rotating clearances and occupied holes. Document rare exceptions.
+   Write the `.ldr` (primer below). Prefer modifying a
    reference design over starting from nothing when the brief allows.
-4. **Validate:** `python tools/run_checks.py MODEL.ldr`. Fix and rerun until clean. Then render
+4. **Validate:** `python tools/run_checks.py MODEL.ldr`. The suite includes aligned-hole checks
+   and an advisory audit of rare-beam directional usage. Review the audit, not just the exit status. Fix and rerun until clean. Then render
    (`tools/ldrender.py`) and look at the picture: it catches gross mistakes the numbers miss.
 5. **Report:** what you built and why; the check results; the parts list (`ldbom.py`), flagging
    anything not owned; and **what the checks can't judge** (§15 of the rules). Use the robot
@@ -94,3 +104,7 @@ Conventions:
 - Don't claim a fit for things Stud.io can't model (e.g. a weight brick wedged in by hand). Reserve
   space and say so.
 - Don't hand over a model you haven't run the checks on.
+- Don't infer that a part was manufactured in every color its DAT file can render. Use verified
+  part/color facts or known-working references for constrained parts. A reference color establishes
+  a useful default, not proof that no other production color exists. Report palette exceptions
+  briefly instead of asking the user to enumerate all their colored parts.

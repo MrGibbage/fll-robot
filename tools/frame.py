@@ -21,7 +21,9 @@ def detect(parts):
         C=np.array(sorted(cells))
         def ends(col):
             cnt=collections.Counter(C[:,col]); thr=max(4,0.25*max(cnt.values()))
-            keys=sorted(k for k,v in cnt.items() if v>=thr); return keys[0],keys[-1]
+            keys=sorted(k for k,v in cnt.items() if v>=thr)
+            if not keys: keys=sorted(cnt)  # partial assemblies may have fewer than four holes per row
+            return keys[0],keys[-1]
         LX,RX=ends(0); RZ,FZ=ends(2)
         if os.environ.get('FLL_FRONT','+z').lower()=='-z': FZ,RZ=RZ,FZ
         wall=C[(C[:,0]==LX)|(C[:,0]==RX)]; Y1=float(wall[:,1].max())

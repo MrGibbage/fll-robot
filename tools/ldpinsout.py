@@ -31,3 +31,5 @@ for p in parts:
     if w[:,1].min()<top-1: bad+=1; print('above top:',p['ref'],name(p['P']))
     if w[:,1].max()>bot+1: bad+=1; print('below bottom:',p['ref'],name(p['P']))
 print(f'{n} vertical wall pins checked, {bad} stick out')
+
+sys.exit(int(bool(bad)))
